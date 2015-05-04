@@ -1,0 +1,66 @@
+#!/bin/bash
+
+INPFN="$1"
+CFG_FN="$2"
+
+DEBUG=0
+
+if [ "$INPFN" == "" ]
+then
+  echo "No input file provided, exiting"
+  exit 1
+elif [ -f "$INPFN" ]
+  # ok
+elif [ -d "$INPFN" ]
+  tstfn=`find "$INPFN" -type f | head -n1`
+  if [ ! -f "$tstfn" ]
+  then
+    echo "Could not find file to process in directory $INPFN ($tstfn), exiting"
+    exit 1
+  fi
+  INPFN="$tstfn"
+else
+  echo "No input file provided, exiting"
+  exit 1
+fi
+
+if [ "$CFG_FN" == "" ]
+then
+  echo "No config file provided, exiting"
+  exit 1
+fi
+
+jq=$CRUNCH_SRC/crunch_scripts/bin/jq
+
+for sfn in `$jq -r '.[]' $CFG_FN`
+do
+  sdir=`dirname $sfn`
+  if [ "$sdir" == "" ]
+  then
+    continue
+  fi
+  ln -s $TASK_KEEPMOUNT/$sdir $sdir
+done
+
+if [ $DEBUG -eq 1 ]
+then
+  echo DEBUG:
+  echo CORE=$CRUNCH_SRC/crunch_scripts/server $CRUNCH_SRC/crunch_scripts/server/genome_analyzer.py -c $CFG_FN -g $INPFN -D ./out-data
+else
+
+CORE=$CRUNCH_SRC/crunch_scripts/server $CRUNCH_SRC/crunch_scripts/server/genome_analyzer.py -c $CFG_FN -g $INPFN -D ./out-data
+
+fi
+
+for sfn in `$jq -r '.[]' $CFG_FN`
+do
+  sdir=`dirname $sfn`
+  if [ "$sdir" == "" ]
+  then
+    continue
+  fi
+  rm $sdir
+done
+
+
+
