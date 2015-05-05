@@ -10,8 +10,10 @@ then
   echo "No input file provided, exiting"
   exit 1
 elif [ -f "$INPFN" ]
-  # ok
+then
+  echo "using $INPFN"
 elif [ -d "$INPFN" ]
+then
   tstfn=`find "$INPFN" -type f | head -n1`
   if [ ! -f "$tstfn" ]
   then
